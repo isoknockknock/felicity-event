@@ -36,7 +36,7 @@ export default function Login() {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        if (!profile.data.interests || profile.data.interests.length === 0) {
+        if (!profile.data.onboardingCompleted) {
           navigate("/onboarding");
         } else {
           navigate("/participant");

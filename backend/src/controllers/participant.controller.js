@@ -38,7 +38,8 @@ exports.updateParticipantProfile = async (req, res) => {
       contactNumber,
       collegeName,
       interests,
-      followedClubs
+      followedClubs,
+      onboardingCompleted
     } = req.body;
 
     if (firstName !== undefined) participant.firstName = firstName;
@@ -47,6 +48,7 @@ exports.updateParticipantProfile = async (req, res) => {
     if (collegeName !== undefined) participant.collegeName = collegeName;
     if (Array.isArray(interests)) participant.interests = interests;
     if (Array.isArray(followedClubs)) participant.followedClubs = followedClubs;
+    if (onboardingCompleted !== undefined) participant.onboardingCompleted = onboardingCompleted;
 
     await participant.save();
     res.json({ message: "Profile updated", participant });

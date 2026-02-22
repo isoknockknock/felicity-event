@@ -52,14 +52,11 @@ export default function Onboarding() {
 
   const savePreferences = async () => {
     try {
-      await Promise.all([
-        API.put("/participants/me/interests", {
-          interests: selectedInterests
-        }),
-        API.put("/participants/me", {
-          followedClubs: selectedClubs
-        })
-      ]);
+      await API.put("/participants/me", {
+        interests: selectedInterests,
+        followedClubs: selectedClubs,
+        onboardingCompleted: true
+      });
       navigate("/participant");
     } catch {
       alert("Failed to save preferences");
@@ -68,8 +65,9 @@ export default function Onboarding() {
 
   const skipOnboarding = async () => {
     try {
-      await API.put("/participants/me/interests", {
-        interests: []
+      await API.put("/participants/me", {
+        interests: [],
+        onboardingCompleted: true
       });
       navigate("/participant");
     } catch {

@@ -14,7 +14,8 @@ const participantSchema = new mongoose.Schema(
     collegeName: { type: String },
     contactNumber: { type: String },
     interests: [String],
-    followedClubs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Organizer" }]
+    followedClubs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Organizer" }],
+    onboardingCompleted: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

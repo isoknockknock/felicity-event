@@ -16,13 +16,13 @@ export default function AdminDashboard() {
       try {
         const [orgsRes, reqsRes, eventsRes] = await Promise.all([
           API.get("/admin/organizers"),
-          API.get("/admin/password-reset-requests"),
+          API.get("/password-reset"),
           API.get("/events")
         ]);
 
         setStats({
           organizers: orgsRes.data.length,
-          requests: reqsRes.data.filter(r => r.status === "PENDING").length,
+          requests: reqsRes.data.filter(r => r.status === "REQUESTED").length,
           totalEvents: eventsRes.data.length
         });
       } catch (err) {

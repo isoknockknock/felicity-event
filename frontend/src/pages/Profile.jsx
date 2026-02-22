@@ -341,11 +341,14 @@ export default function Profile() {
   }, [role, fetchProfile]);
 
   const requestPasswordReset = async () => {
+    const reason = prompt("Please provide a reason for the password reset request:");
+    if (!reason) return;
+
     try {
-      await API.post("/organizers/password-reset/request");
+      await API.post("/password-reset/request", { reason });
       setMessage("Success: Password reset request sent to Admin.");
     } catch (err) {
-      setMessage("Failed: Could not send request.");
+      setMessage(err.response?.data?.message || "Failed: Could not send request.");
     }
   };
 
