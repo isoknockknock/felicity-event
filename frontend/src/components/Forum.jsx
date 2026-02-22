@@ -1,7 +1,8 @@
-import { useEffect, useState, useContext, useRef } from "react";
+import { useEffect, useState, useContext, useRef, useMemo } from "react";
 import { io } from "socket.io-client";
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import "./Forum.css";
 
 const socket = io("http://localhost:5000");
 
@@ -9,7 +10,16 @@ const EMOJI_OPTIONS = ["👍", "❤️", "🎉", "😂", "🔥", "👏"];
 
 export default function Forum({ eventId }) {
   const { role, token } = useContext(AuthContext);
-  const userId = token ? JSON.parse(atob(token.split(".")[1])).userId : null;
+  const userId = useMemo(() => {
+    try {
+      if (!token) return null;
+      const parts = token.split(".");
+      if (parts.length < 2) return null;
+      return JSON.parse(atob(parts[1])).userId;
+    } catch {
+      return null;
+    }
+  }, [token]);
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -53,6 +63,7 @@ export default function Forum({ eventId }) {
       socket.off("receive_message");
       socket.off("message_deleted");
       socket.off("message_pinned");
+      socket.emit("leave_event", eventId);
     };
   }, [eventId, userId, threadView]);
 
@@ -137,19 +148,12 @@ export default function Forum({ eventId }) {
     });
 
     return (
-      <div style={{ display: "flex", gap: "0.3rem", marginTop: "0.3rem", flexWrap: "wrap" }}>
+      <div className="reactions-list">
         {Object.entries(grouped).map(([emoji, users]) => (
           <button
             key={emoji}
+            className={`reaction-btn ${users.includes(userId) ? "active" : ""}`}
             onClick={() => handleReact(msg._id, emoji)}
-            style={{
-              background: users.includes(userId) ? "#dbeafe" : "#f3f4f6",
-              border: users.includes(userId) ? "1px solid #3b82f6" : "1px solid #d1d5db",
-              borderRadius: "12px",
-              padding: "0.1rem 0.5rem",
-              fontSize: "0.8rem",
-              cursor: "pointer",
-            }}
           >
             {emoji} {users.length}
           </button>
@@ -161,93 +165,54 @@ export default function Forum({ eventId }) {
   const renderMessage = (msg, isThreadReply = false) => (
     <div
       key={msg._id}
-      style={{
-        background: msg.isAnnouncement
-          ? "#fef3c7"
-          : msg.isPinned
-            ? "#ede9fe"
-            : isThreadReply
-              ? "#f9fafb"
-              : "#f3f4f6",
-        padding: "0.6rem 0.8rem",
-        borderRadius: "8px",
-        marginBottom: "0.5rem",
-        marginLeft: isThreadReply ? "1.5rem" : 0,
-        borderLeft: msg.isPinned ? "3px solid #8b5cf6" : msg.isAnnouncement ? "3px solid #f59e0b" : "none",
-        position: "relative",
-      }}
+      className={`message-item ${msg.isAnnouncement ? "announcement" : ""} ${msg.isPinned ? "pinned" : ""} ${isThreadReply ? "reply" : ""}`}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <strong style={{ fontSize: "0.85rem" }}>
+      <div className="message-header">
+        <strong className="sender-name">
           {msg.senderName || msg.senderRole}
           {msg.isAnnouncement && " 📢"}
           {msg.isPinned && " 📌"}
         </strong>
-        <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-          <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
-            {new Date(msg.createdAt).toLocaleTimeString()}
+        <div className="message-actions">
+          <span className="message-time">
+            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
 
-          {/* Emoji react button */}
           <button
+            className="action-icon-btn"
             onClick={() => setShowEmojiFor(showEmojiFor === msg._id ? null : msg._id)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              padding: "0 0.2rem",
-            }}
             title="React"
           >
             😊
           </button>
 
-          {/* Reply button (top-level only) */}
           {!isThreadReply && (
             <button
+              className="action-icon-btn"
               onClick={() => {
                 setReplyTo(msg._id);
                 loadThread(msg._id);
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "0.75rem",
-                color: "#2563eb",
               }}
             >
               Reply
             </button>
           )}
 
-          {/* Organizer moderation */}
           {role === "ORGANIZER" && (
             <>
               <button
+                className="action-icon-btn"
                 onClick={() => handlePin(msg._id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "0.75rem",
-                  color: "#8b5cf6",
-                }}
                 title={msg.isPinned ? "Unpin" : "Pin"}
+                style={{ color: "var(--accent-primary)" }}
               >
-                {msg.isPinned ? "Unpin" : "Pin"}
+                {msg.isPinned ? "📍" : "📌"}
               </button>
               <button
+                className="action-icon-btn"
                 onClick={() => handleDelete(msg._id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "0.75rem",
-                  color: "#ef4444",
-                }}
                 title="Delete"
+                style={{ color: "var(--danger)" }}
               >
                 ✕
               </button>
@@ -256,34 +221,13 @@ export default function Forum({ eventId }) {
         </div>
       </div>
 
-      {/* Emoji picker */}
       {showEmojiFor === msg._id && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            right: 0,
-            background: "white",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-            padding: "0.4rem",
-            display: "flex",
-            gap: "0.3rem",
-            zIndex: 10,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          }}
-        >
+        <div className="emoji-picker">
           {EMOJI_OPTIONS.map((emoji) => (
             <button
               key={emoji}
+              className="emoji-btn"
               onClick={() => handleReact(msg._id, emoji)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "1.2rem",
-                padding: "0.1rem",
-              }}
             >
               {emoji}
             </button>
@@ -291,24 +235,12 @@ export default function Forum({ eventId }) {
         </div>
       )}
 
-      <p style={{ marginTop: "0.3rem", marginBottom: "0.2rem" }}>{msg.content}</p>
+      <p className="message-content">{msg.content}</p>
 
       {renderReactions(msg)}
 
-      {/* Thread indicator */}
       {!isThreadReply && replyCount(msg._id) > 0 && (
-        <button
-          onClick={() => loadThread(msg._id)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "0.75rem",
-            color: "#2563eb",
-            marginTop: "0.3rem",
-            padding: 0,
-          }}
-        >
+        <button className="thread-link" onClick={() => loadThread(msg._id)}>
           💬 {replyCount(msg._id)} {replyCount(msg._id) === 1 ? "reply" : "replies"}
         </button>
       )}
@@ -316,135 +248,91 @@ export default function Forum({ eventId }) {
   );
 
   return (
-    <div>
-      {/* Notification */}
+    <div className="forum-container">
       {notification && (
-        <div
-          style={{
-            background: "#dbeafe",
-            color: "#1e40af",
-            padding: "0.5rem 0.8rem",
-            borderRadius: "6px",
-            marginBottom: "0.5rem",
-            fontSize: "0.85rem",
-            fontWeight: 600,
-          }}
-        >
+        <div className="forum-notification">
           🔔 {notification}
         </div>
       )}
 
-      {/* Pinned Messages */}
       {pinnedMessages.length > 0 && (
-        <div style={{ marginBottom: "0.75rem" }}>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#8b5cf6", marginBottom: "0.3rem" }}>
-            📌 Pinned Messages
+        <div className="pinned-section">
+          <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--accent-primary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+            📌 Pinned Announcements
           </div>
           {pinnedMessages.map((msg) => renderMessage(msg))}
         </div>
       )}
 
-      {/* Messages List */}
-      <div
-        style={{
-          maxHeight: "350px",
-          overflowY: "auto",
-          marginBottom: "1rem",
-          paddingRight: "0.5rem",
-        }}
-      >
+      <div className="messages-list">
         {topLevelMessages.length === 0 && (
-          <p style={{ color: "#9ca3af" }}>No messages yet.</p>
+          <p className="p-muted" style={{ textAlign: "center", padding: "2rem" }}>No messages yet. Start the conversation!</p>
         )}
 
         {topLevelMessages.map((msg) => (
           <div key={msg._id}>
             {renderMessage(msg)}
 
-            {/* Thread view */}
             {threadView === msg._id && (
-              <div style={{ marginLeft: "1.5rem", borderLeft: "2px solid #e5e7eb", paddingLeft: "0.5rem" }}>
+              <div className="thread-replies">
                 {threadReplies.length === 0 && (
-                  <p style={{ color: "#9ca3af", fontSize: "0.8rem" }}>No replies yet.</p>
+                  <p className="p-muted" style={{ fontSize: "0.8rem", marginLeft: "2rem" }}>No replies yet.</p>
                 )}
                 {threadReplies.map((reply) => renderMessage(reply, true))}
               </div>
             )}
           </div>
         ))}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Reply indicator */}
       {replyTo && (
-        <div
-          style={{
-            background: "#f0f9ff",
-            padding: "0.4rem 0.8rem",
-            borderRadius: "6px",
-            marginBottom: "0.5rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "0.85rem",
-          }}
-        >
-          <span>
-            Replying to thread...
-          </span>
+        <div className="reply-context">
+          <span>Replying to {messages.find(m => m._id === replyTo)?.senderName || "message"}...</span>
           <button
+            className="action-icon-btn"
             onClick={() => {
               setReplyTo(null);
               setThreadView(null);
               setThreadReplies([]);
             }}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#ef4444",
-              fontWeight: 600,
-            }}
+            style={{ color: "var(--danger)", fontWeight: 700 }}
           >
             Cancel
           </button>
         </div>
       )}
 
-      {/* Input */}
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <input
-          placeholder={replyTo ? "Write a reply..." : "Write a message..."}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          style={{ flex: 1 }}
-        />
-        <button className="primary" onClick={sendMessage}>
-          {replyTo ? "Reply" : "Send"}
-        </button>
-        {role === "ORGANIZER" && !replyTo && (
-          <button
-            onClick={sendAnnouncement}
-            style={{
-              background: "#f59e0b",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              fontWeight: 600,
+      <div className="forum-input-area">
+        <div style={{ flex: 1 }}>
+          <textarea
+            placeholder={replyTo ? "Write a reply..." : "Talk to the community..."}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
             }}
-          >
-            📢 Announce
+            style={{ marginBottom: 0, minHeight: "45px", paddingTop: "0.75rem" }}
+          />
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button className="primary" onClick={sendMessage}>
+            {replyTo ? "Reply" : "Send"}
           </button>
-        )}
+          {role === "ORGANIZER" && !replyTo && (
+            <button
+              onClick={sendAnnouncement}
+              className="secondary"
+              title="Post as Announcement"
+              style={{ padding: "0.75rem" }}
+            >
+              📢
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,33 +1,97 @@
 .navbar {
-  background: #111;
-  padding: 15px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
+}
+
+.logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.logo-accent {
+  color: var(--accent-primary);
 }
 
 .nav-links {
   display: flex;
-  gap: 20px;
   align-items: center;
+  gap: 2rem;
 }
 
-.nav-links a {
-  text-decoration: none;
-  color: white;
+.nav-link {
   font-weight: 500;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
 }
 
-.nav-links a:hover {
-  color: #4e73df;
+.nav-link:hover {
+  color: var(--accent-primary);
 }
 
-.nav-links button {
-  background: #dc3545;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
+.btn-primary {
+  background: var(--accent-primary);
+  color: white !important;
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px var(--accent-soft);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--accent-soft);
+}
+
+.logout-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  background: var(--bg-primary);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    gap: 1rem;
+  }
+
+  .nav-link {
+    display: none;
+    /* Consider a mobile menu for real app */
+  }
+
+  .nav-link:last-child,
+  .logout-btn {
+    display: block;
+  }
 }

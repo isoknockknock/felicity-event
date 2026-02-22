@@ -18,7 +18,7 @@ export default function EventList() {
   const [eligibilityFilter, setEligibilityFilter] = useState("ALL");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [scope, setScope] = useState("ALL"); // ALL | FOLLOWED
+  const [scope, setScope] = useState("ALL");
 
   useEffect(() => {
     const load = async () => {
@@ -101,7 +101,6 @@ export default function EventList() {
       );
     }
 
-    // Preference-based ordering (only for participants when no explicit filters)
     if (role === "PARTICIPANT" && scope === "ALL" && !query.trim() && typeFilter === "ALL") {
       const followedSet = new Set(followedClubs.map(id => id.toString()));
       const interestsSet = new Set(interests.map(i => i.toLowerCase()));
@@ -109,12 +108,8 @@ export default function EventList() {
       list = list.sort((a, b) => {
         let scoreA = 0;
         let scoreB = 0;
-
-        // Prioritize followed clubs
         if (followedSet.has(a.organizer?._id?.toString())) scoreA += 10;
         if (followedSet.has(b.organizer?._id?.toString())) scoreB += 10;
-
-        // Prioritize events with matching tags/interests
         if (a.tags && Array.isArray(a.tags)) {
           const matchingTags = a.tags.filter(t => interestsSet.has(String(t).toLowerCase())).length;
           scoreA += matchingTags * 5;
@@ -123,123 +118,117 @@ export default function EventList() {
           const matchingTags = b.tags.filter(t => interestsSet.has(String(t).toLowerCase())).length;
           scoreB += matchingTags * 5;
         }
-
-        // If scores are equal, sort by date (upcoming first)
         if (scoreA === scoreB) {
           const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
           const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
           return dateA - dateB;
         }
-
         return scoreB - scoreA;
       });
     }
 
     return list;
-  }, [
-    events,
-    fuse,
-    query,
-    typeFilter,
-    eligibilityFilter,
-    dateFrom,
-    dateTo,
-    scope,
-    role,
-    followedClubs,
-    interests
-  ]);
+  }, [events, fuse, query, typeFilter, eligibilityFilter, dateFrom, dateTo, scope, role, followedClubs, interests]);
 
-  if (loading) return <div className="container">Loading...</div>;
+  if (loading) return <div className="container"><p className="muted">Discovering events...</p></div>;
 
   return (
     <div className="container">
       <div className="browse-header">
-        <h2>Browse Events</h2>
-        <div className="browse-sub">Search, filter, and discover trending events.</div>
+        <h1>Discover Events</h1>
+        <p className="browse-sub">Explore the best of Felicity. filter by type, date, or organizer.</p>
       </div>
 
       <div className="browse-controls">
         <input
           className="browse-search"
-          placeholder="Search events or organizers..."
+          placeholder="Search events, clubs, or categories..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option value="ALL">All Types</option>
-          <option value="NORMAL">Normal</option>
-          <option value="MERCHANDISE">Merchandise</option>
-        </select>
-        <select value={eligibilityFilter} onChange={(e) => setEligibilityFilter(e.target.value)}>
-          {eligibilityOptions.map(opt => (
-            <option key={opt} value={opt}>
-              {opt === "ALL" ? "All Eligibility" : opt}
-            </option>
-          ))}
-        </select>
-        <div className="date-range">
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          <span className="muted">to</span>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-        </div>
-
-        {role === "PARTICIPANT" && (
-          <select value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="ALL">All Events</option>
-            <option value="FOLLOWED">Followed Clubs</option>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", width: "100%" }}>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="ALL">All Categories</option>
+            <option value="NORMAL">Normal Events</option>
+            <option value="MERCHANDISE">Merchandise</option>
           </select>
-        )}
+          <select value={eligibilityFilter} onChange={(e) => setEligibilityFilter(e.target.value)}>
+            {eligibilityOptions.map(opt => (
+              <option key={opt} value={opt}>
+                {opt === "ALL" ? "All Eligibility" : opt}
+              </option>
+            ))}
+          </select>
+          <div className="date-range">
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            <span className="muted">to</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          {role === "PARTICIPANT" && (
+            <select value={scope} onChange={(e) => setScope(e.target.value)}>
+              <option value="ALL">All Events</option>
+              <option value="FOLLOWED">From Followed Clubs</option>
+            </select>
+          )}
+        </div>
       </div>
 
-      <div className="section">
-        <div className="section-head">
-          <h3>Trending (Top 5 / 24h)</h3>
-        </div>
-        {trending.length === 0 ? (
-          <div className="empty">No trending data yet.</div>
-        ) : (
+      {trending.length > 0 && (
+        <div className="section">
+          <div className="section-head">
+            <h3>Trending Now</h3>
+            <span className="muted">Hottest in the last 24h</span>
+          </div>
           <div className="cards-grid">
             {trending.map((e) => (
-              <div key={e._id} className="card">
+              <div key={e._id} className="card premium-card">
                 <div className="card-title">{e.name}</div>
                 <div className="card-meta">
-                  <span><b>Organizer:</b> {e.organizer?.name || "—"}</span>
+                  <span><b>By:</b> {e.organizer?.name || "—"}</span>
                   <span><b>Type:</b> {e.type}</span>
-                  <span><b>24h regs:</b> {e.registrations24h}</span>
+                  <span style={{ color: "var(--success)", fontWeight: 700 }}>{e.registrations24h}+ Joined recently</span>
                 </div>
                 <Link to={`/events/${e._id}`}>
-                  <button className="primary">View Details</button>
+                  <button className="primary full-width">Join Event</button>
                 </Link>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="section">
         <div className="section-head">
-          <h3>All Events</h3>
-          <div className="muted">{filteredEvents.length} results</div>
+          <h3>Local Events</h3>
+          <div className="muted">{filteredEvents.length} events found</div>
         </div>
 
         {filteredEvents.length === 0 ? (
-          <div className="empty">No events match your search/filters.</div>
+          <div className="empty">
+            <p>No events found matching your criteria.</p>
+            <button
+              onClick={() => { setQuery(""); setTypeFilter("ALL"); setScope("ALL"); }}
+              className="secondary sm"
+              style={{ marginTop: "1rem" }}
+            >
+              Clear Filters
+            </button>
+          </div>
         ) : (
           <div className="cards-grid">
             {filteredEvents.map((e) => (
-              <div key={e._id} className="card">
+              <div key={e._id} className="card premium-card">
                 <div className="card-title">{e.name}</div>
                 <div className="card-desc">{e.description}</div>
                 <div className="card-meta">
-                  <span><b>Organizer:</b> {e.organizer?.name || "—"}</span>
-                  <span><b>Type:</b> {e.type}</span>
+                  <span><b>By:</b> {e.organizer?.name || "—"}</span>
+                  <span><b>Category:</b> {e.type}</span>
                   {e.startDate && (
-                    <span><b>Start:</b> {new Date(e.startDate).toLocaleString()}</span>
+                    <span><b>When:</b> {new Date(e.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                   )}
                 </div>
                 <Link to={`/events/${e._id}`}>
-                  <button className="primary">View Details</button>
+                  <button className="primary full-width">Explore</button>
                 </Link>
               </div>
             ))}

@@ -1,7 +1,8 @@
 .organizer-dashboard-container {
   padding: 40px;
   min-height: 80vh;
-  background: #f5f7fb;
+  background: var(--bg-primary);
+  transition: var(--transition);
 }
 
 .dashboard-header {
@@ -12,35 +13,25 @@
 }
 
 .dashboard-header h1 {
-  font-size: 2rem;
-  color: #1f2937;
+  font-size: 2.5rem;
+  color: var(--text-primary);
 }
 
-.create-event-btn {
-  padding: 12px 24px;
-  background: #2563eb;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: background 0.2s ease;
-}
-
-.create-event-btn:hover {
-  background: #1e40af;
-}
+/* Base styles for buttons already in styles.css */
 
 .analytics-section {
-  background: white;
+  background: var(--bg-secondary);
   padding: 30px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
 .analytics-section h2 {
   margin-bottom: 20px;
-  color: #1f2937;
+  color: var(--text-primary);
+  font-size: 1.5rem;
 }
 
 .analytics-grid {
@@ -50,48 +41,60 @@
 }
 
 .analytics-card {
-  background: #f9fafb;
-  padding: 20px;
-  border-radius: 8px;
-  border-left: 4px solid #2563eb;
+  background: var(--bg-tertiary);
+  padding: 24px;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--accent-primary);
+  transition: var(--transition);
+}
+
+.analytics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .analytics-label {
-  font-size: 0.9rem;
-  color: #6b7280;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
   margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .analytics-value {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
 }
 
 .events-section {
-  background: white;
+  background: var(--bg-secondary);
   padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
 .events-section h2 {
   margin-bottom: 20px;
-  color: #1f2937;
+  color: var(--text-primary);
+  font-size: 1.5rem;
 }
 
 .no-events {
   text-align: center;
   padding: 60px 20px;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .create-event-link {
   display: inline-block;
   margin-top: 15px;
-  color: #2563eb;
+  color: var(--accent-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .create-event-link:hover {
@@ -100,25 +103,26 @@
 
 .events-carousel {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
 .event-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
   display: flex;
   flex-direction: column;
 }
 
 .event-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
 }
 
 .event-card-header {
@@ -130,18 +134,20 @@
 
 .event-card-header h3 {
   margin: 0;
-  color: #1f2937;
-  font-size: 1.2rem;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-family: 'Outfit', sans-serif;
   flex: 1;
   margin-right: 10px;
 }
 
+/* Status badge updated to use classes if possible, but keeping current approach for dynamic colors */
 .status-badge {
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-full);
   color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -155,25 +161,28 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
 }
 
 .info-label {
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .event-card-footer {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   padding-top: 15px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .view-link {
-  color: #2563eb;
-  font-weight: 500;
-  font-size: 0.9rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: var(--transition);
 }
 
 .event-card:hover .view-link {
-  text-decoration: underline;
+  transform: translateX(4px);
 }

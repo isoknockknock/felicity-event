@@ -21,7 +21,11 @@ const app = express();
 connectDB().then(seedAdmin);
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://felicity-event-indol.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true
 }));
@@ -62,6 +66,10 @@ io.on("connection", (socket) => {
 
   socket.on("join_event", (eventId) => {
     socket.join(eventId);
+  });
+
+  socket.on("leave_event", (eventId) => {
+    socket.leave(eventId);
   });
 
   socket.on("send_message", async (data) => {

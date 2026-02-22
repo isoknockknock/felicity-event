@@ -1,7 +1,8 @@
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import "./Login.css";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
@@ -23,21 +24,16 @@ export default function Login() {
 
     try {
       const res = await API.post("/auth/login", form);
-
       const token = res.data.token;
 
-      // Save token first
       localStorage.setItem("token", token);
       localStorage.setItem("role", form.role);
 
       login(token, form.role);
 
       if (form.role === "PARTICIPANT") {
-        // Check if participant needs onboarding
         const profile = await API.get("/participants/me", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (!profile.data.interests || profile.data.interests.length === 0) {
@@ -52,89 +48,68 @@ export default function Login() {
       }
 
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f7fb"
-      }}
-    >
-      <div
-        style={{
-          width: "400px",
-          background: "white",
-          padding: "2.5rem",
-          borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.08)"
-        }}
-      >
-        <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-          Felicity EMS Login
-        </h2>
+    <div className="login-container">
+      <div className="login-card premium-card">
+        <div className="login-header">
+          <h1>Welcome Back</h1>
+          <p>Login to your Felicity EMS account</p>
+        </div>
 
-        {error && (
-          <div
-            style={{
-              background: "#fee2e2",
-              color: "#b91c1c",
-              padding: "0.8rem",
-              borderRadius: "6px",
-              marginBottom: "1rem",
-              fontSize: "0.9rem"
-            }}
-          >
-            {error}
+        {error && <div className="error-alert">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="input-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="name@iiit.ac.in"
+              required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
           </div>
-        )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            placeholder="Email"
-            required
-            onChange={(e) =>
-              setForm({ ...form, email: e.target.value })
-            }
-          />
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              required
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            onChange={(e) =>
-              setForm({ ...form, password: e.target.value })
-            }
-          />
+          <div className="input-group">
+            <label htmlFor="role">Login As</label>
+            <select
+              id="role"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            >
+              <option value="PARTICIPANT">Participant</option>
+              <option value="ORGANIZER">Organizer</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
 
-          <select
-            onChange={(e) =>
-              setForm({ ...form, role: e.target.value })
-            }
-          >
-            <option value="PARTICIPANT">Participant</option>
-            <option value="ORGANIZER">Organizer</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-
-          <button
-            className="primary"
-            style={{ width: "100%", marginTop: "0.5rem" }}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <button type="submit" className="primary full-width" disabled={loading}>
+            {loading ? "Verifying..." : "Sign In"}
           </button>
         </form>
+
+        <div className="login-footer">
+          <p>Don't have an account? <Link to="/register">Create one</Link></p>
+        </div>
       </div>
     </div>
   );

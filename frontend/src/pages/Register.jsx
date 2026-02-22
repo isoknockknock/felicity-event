@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
+import "./Login.css"; // Reuse login styles which are very similar
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,75 +14,105 @@ export default function Register() {
     participantType: "IIIT"
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       await API.post("/auth/register/participant", {
         ...form,
         role: "PARTICIPANT"
       });
-      alert("Account created successfully!");
-      navigate("/login");
+      navigate("/login", { state: { message: "Account created successfully! Please login." } });
     } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Registration failed. Please check your details.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      height: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center"
-    }}>
-      <div style={{
-        width: "400px",
-        background: "white",
-        padding: "2.5rem",
-        borderRadius: "12px",
-        boxShadow: "0 10px 25px rgba(0,0,0,0.08)"
-      }}>
-        <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-          Create Account
-        </h2>
+    <div className="login-container">
+      <div className="login-card premium-card">
+        <div className="login-header">
+          <h1>Join Felicity</h1>
+          <p>Create your participant account</p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            placeholder="First Name"
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          />
+        {error && <div className="error-alert">{error}</div>}
 
-          <input
-            placeholder="Last Name"
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-          />
+        <form onSubmit={handleSubmit} className="login-form">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div className="input-group">
+              <label htmlFor="firstName">First Name</label>
+              <input
+                id="firstName"
+                placeholder="John"
+                required
+                value={form.firstName}
+                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                id="lastName"
+                placeholder="Doe"
+                required
+                value={form.lastName}
+                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              />
+            </div>
+          </div>
 
-          <input
-            placeholder="Email"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
+          <div className="input-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="name@iiit.ac.in"
+              required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Choose a strong password"
+              required
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
 
-          <select
-            value={form.participantType}
-            onChange={(e) =>
-              setForm({ ...form, participantType: e.target.value })
-            }
-          >
-            <option value="IIIT">IIIT Student</option>
-            <option value="NON_IIIT">Non-IIIT Participant</option>
-          </select>
+          <div className="input-group">
+            <label htmlFor="participantType">Participant Type</label>
+            <select
+              id="participantType"
+              value={form.participantType}
+              onChange={(e) => setForm({ ...form, participantType: e.target.value })}
+            >
+              <option value="IIIT">IIIT Student</option>
+              <option value="NON_IIIT">Non-IIIT Participant</option>
+            </select>
+          </div>
 
-          <button className="primary" style={{ width: "100%" }}>
-            Register
+          <button type="submit" className="primary full-width" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
+
+        <div className="login-footer">
+          <p>Already have an account? <Link to="/login">Sign In</Link></p>
+        </div>
       </div>
     </div>
   );

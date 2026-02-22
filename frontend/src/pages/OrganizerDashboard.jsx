@@ -13,7 +13,7 @@ export default function OrganizerDashboard() {
       const res = await API.get("/events/organizer");
       setMyEvents(res.data);
       setLoading(false);
-      
+
       // Fetch analytics after events are loaded
       fetchAnalytics(res.data);
     } catch {
@@ -60,20 +60,20 @@ export default function OrganizerDashboard() {
 
   const getStatusColor = (status) => {
     const colors = {
-      DRAFT: "#6b7280",
-      PUBLISHED: "#3b82f6",
-      ONGOING: "#22c55e",
+      DRAFT: "var(--text-tertiary)",
+      PUBLISHED: "var(--accent-primary)",
+      ONGOING: "var(--success)",
       COMPLETED: "#8b5cf6",
-      CLOSED: "#ef4444"
+      CLOSED: "var(--danger)"
     };
-    return colors[status] || "#6b7280";
+    return colors[status] || "var(--text-tertiary)";
   };
 
   const getTypeLabel = (type) => {
     return type === "NORMAL" ? "Normal Event" : "Merchandise";
   };
 
-  if (loading) return <div className="organizer-dashboard-container">Loading...</div>;
+  if (loading) return <div className="organizer-dashboard-container"><p className="p-muted">Loading your workspace...</p></div>;
 
   const completedEvents = myEvents.filter(e => e.status === "COMPLETED");
 
@@ -81,8 +81,8 @@ export default function OrganizerDashboard() {
     <div className="organizer-dashboard-container">
       <div className="dashboard-header">
         <h1>Organizer Dashboard</h1>
-        <Link to="/events/create" className="create-event-btn">
-          + Create New Event
+        <Link to="/events/create">
+          <button className="primary">+ Create New Event</button>
         </Link>
       </div>
 
@@ -117,8 +117,8 @@ export default function OrganizerDashboard() {
         {myEvents.length === 0 ? (
           <div className="no-events">
             <p>No events created yet.</p>
-            <Link to="/events/create" className="create-event-link">
-              Create your first event
+            <Link to="/events/create">
+              <button className="primary">Create your first event</button>
             </Link>
           </div>
         ) : (
@@ -140,24 +140,24 @@ export default function OrganizerDashboard() {
                 </div>
                 <div className="event-card-body">
                   <div className="event-info-item">
-                    <span className="info-label">Type:</span>
-                    <span>{getTypeLabel(event.type)}</span>
+                    <span className="info-label">Type</span>
+                    <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{getTypeLabel(event.type)}</span>
                   </div>
                   {event.startDate && (
                     <div className="event-info-item">
-                      <span className="info-label">Start:</span>
-                      <span>{new Date(event.startDate).toLocaleDateString()}</span>
+                      <span className="info-label">Start Date</span>
+                      <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{new Date(event.startDate).toLocaleDateString()}</span>
                     </div>
                   )}
                   {event.registrationLimit && (
                     <div className="event-info-item">
-                      <span className="info-label">Limit:</span>
-                      <span>{event.registrationLimit} participants</span>
+                      <span className="info-label">Limit</span>
+                      <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{event.registrationLimit} slots</span>
                     </div>
                   )}
                 </div>
                 <div className="event-card-footer">
-                  <span className="view-link">View Details →</span>
+                  <span className="view-link">Manage Event →</span>
                 </div>
               </Link>
             ))}

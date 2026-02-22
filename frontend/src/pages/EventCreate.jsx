@@ -93,13 +93,24 @@ export default function EventCreate() {
     setLoading(true);
 
     try {
+      if (form.startDate && form.endDate && new Date(form.startDate) >= new Date(form.endDate)) {
+        alert("Event End Date must be after Start Date");
+        setLoading(false);
+        return;
+      }
+      if (form.registrationDeadline && form.startDate && new Date(form.registrationDeadline) > new Date(form.startDate)) {
+        alert("Registration Deadline must be before Event Start Date");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         ...form,
         registrationDeadline: form.registrationDeadline || undefined,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
         tags: form.tags
-          ? form.tags.split(",").map(t => t.trim())
+          ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
           : [],
         merchandiseItems: form.merchandiseItems.map(item => ({
           name: item.name,
@@ -126,7 +137,7 @@ export default function EventCreate() {
       };
 
       const res = await API.post("/events", payload);
-      alert("Event created as draft!");
+      alert("Event launched successfully!");
       navigate(`/organizer/events/${res.data._id}`);
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.response?.data?.message || "Failed to create event";
@@ -139,270 +150,282 @@ export default function EventCreate() {
   return (
     <div className="event-create-container">
       <div className="event-create-header">
-        <h1>Create New Event</h1>
-        <button onClick={() => navigate("/organizer")} className="cancel-btn">
+        <h1>New Event</h1>
+        <button onClick={() => navigate("/organizer")} className="secondary">
           Cancel
         </button>
       </div>
 
       <form onSubmit={createEvent} className="event-create-form">
-        <div className="form-section">
-          <h2>Basic Information</h2>
-          <label htmlFor="eventName">Event Name *</label>
-          <input
-            id="eventName"
-            placeholder="e.g. Annual Sports Meet"
-            required
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-          />
-          <label htmlFor="description">Description *</label>
-          <textarea
-            id="description"
-            placeholder="Tell participants what your event is about..."
-            required
-            rows="4"
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-          />
-          <label htmlFor="eventType">Event Type</label>
-          <select
-            id="eventType"
-            value={form.type}
-            onChange={e => setForm({ ...form, type: e.target.value })}
-          >
-            <option value="NORMAL">Normal Event</option>
-            <option value="MERCHANDISE">Merchandise</option>
-          </select>
-          <label htmlFor="eligibility">Eligibility</label>
-          <input
-            id="eligibility"
-            placeholder="e.g. All Students, 3rd Year Only"
-            value={form.eligibility}
-            onChange={e => setForm({ ...form, eligibility: e.target.value })}
-          />
-        </div>
-
-        <div className="form-section">
-          <h2>Dates & Limits</h2>
-          <label htmlFor="registrationDeadline">Registration Deadline</label>
-          <input
-            id="registrationDeadline"
-            type="datetime-local"
-            value={form.registrationDeadline}
-            onChange={e => setForm({ ...form, registrationDeadline: e.target.value })}
-          />
-          <label htmlFor="startDate">Start Date</label>
-          <input
-            id="startDate"
-            type="datetime-local"
-            value={form.startDate}
-            onChange={e => setForm({ ...form, startDate: e.target.value })}
-          />
-          <label htmlFor="endDate">End Date</label>
-          <input
-            id="endDate"
-            type="datetime-local"
-            value={form.endDate}
-            onChange={e => setForm({ ...form, endDate: e.target.value })}
-          />
-          <label htmlFor="registrationLimit">Registration Limit (0 for unlimited)</label>
-          <input
-            id="registrationLimit"
-            type="number"
-            min="0"
-            value={form.registrationLimit}
-            onChange={e => setForm({ ...form, registrationLimit: Number(e.target.value) })}
-          />
-          <label htmlFor="registrationFee">Registration Fee (₹)</label>
-          <input
-            id="registrationFee"
-            type="number"
-            min="0"
-            value={form.registrationFee}
-            onChange={e => setForm({ ...form, registrationFee: Number(e.target.value) })}
-          />
-          <label htmlFor="tags">Tags (comma separated)</label>
-          <input
-            id="tags"
-            placeholder="sports, tech, cult"
-            value={form.tags}
-            onChange={e => setForm({ ...form, tags: e.target.value })}
-          />
-        </div>
-
-        {form.type === "NORMAL" && (
-          <div className="form-section">
-            <h2>Team Settings (Optional)</h2>
-            <label className="checkbox-label" style={{ marginBottom: 10 }}>
+        {/* Section 1: Core Details */}
+        <div className="form-section premium-card">
+          <h2>Essential Details</h2>
+          <div className="section-grid">
+            <div className="input-group">
+              <label>Event Title</label>
               <input
-                type="checkbox"
-                checked={Boolean(form.isTeamEvent)}
-                onChange={(e) =>
-                  setForm({ ...form, isTeamEvent: e.target.checked })
-                }
+                placeholder="Ex: Spring Fest 2026"
+                required
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
               />
-              Team-based registrations
-            </label>
-            {form.isTeamEvent && (
-              <>
-                <label htmlFor="teamSize">Team Size</label>
+            </div>
+            <div className="input-group">
+              <label>Description</label>
+              <textarea
+                placeholder="Capture their attention with a great description..."
+                required
+                rows="4"
+                value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+            <div className="section-row">
+              <div className="input-group">
+                <label>Category</label>
+                <select
+                  value={form.type}
+                  onChange={e => setForm({ ...form, type: e.target.value })}
+                >
+                  <option value="NORMAL">Standard Event</option>
+                  <option value="MERCHANDISE">Merchandise Only</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Eligibility</label>
                 <input
-                  id="teamSize"
-                  type="number"
-                  min="2"
-                  placeholder="e.g., 2"
-                  value={form.teamSize}
-                  onChange={(e) =>
-                    setForm({ ...form, teamSize: Number(e.target.value) })
-                  }
+                  placeholder="Ex: All Students"
+                  value={form.eligibility}
+                  onChange={e => setForm({ ...form, eligibility: e.target.value })}
                 />
-                <p className="form-help-text">
-                  Participants must enter a Team Code while registering. “Team completion” counts how many teams reach the configured size.
-                </p>
-              </>
-            )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <h2>Custom Registration Form</h2>
-            <p className="form-help-text">
-              Add custom fields for event registration. Forms will be locked after the first registration.
-            </p>
-            {form.registrationForm.map((field, index) => (
-              <div key={index} className="form-field-builder">
-                <div className="field-controls">
-                  <button
-                    type="button"
-                    onClick={() => moveFormField(index, "up")}
-                    disabled={index === 0}
-                    className="move-btn"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveFormField(index, "down")}
-                    disabled={index === form.registrationForm.length - 1}
-                    className="move-btn"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeFormField(index)}
-                    className="remove-field-btn"
-                  >
-                    Remove
+        {/* Section 2: Scheduling */}
+        <div className="form-section premium-card">
+          <h2>Time & Logistics</h2>
+          <div className="section-grid">
+            <div className="input-group">
+              <label>Registration Closes</label>
+              <input
+                type="datetime-local"
+                value={form.registrationDeadline}
+                onChange={e => setForm({ ...form, registrationDeadline: e.target.value })}
+              />
+            </div>
+            <div className="section-row">
+              <div className="input-group">
+                <label>Event Starts</label>
+                <input
+                  type="datetime-local"
+                  value={form.startDate}
+                  onChange={e => setForm({ ...form, startDate: e.target.value })}
+                />
+              </div>
+              <div className="input-group">
+                <label>Event Ends</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={form.endDate}
+                  onChange={e => setForm({ ...form, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="section-row">
+              <div className="input-group">
+                <label>Entry Fee (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.registrationFee}
+                  onChange={e => setForm({ ...form, registrationFee: Number(e.target.value) })}
+                />
+              </div>
+              <div className="input-group">
+                <label>Participant Cap</label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="0 for unlimited"
+                  value={form.registrationLimit}
+                  onChange={e => setForm({ ...form, registrationLimit: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="input-group">
+              <label>Search Meta Tags</label>
+              <input
+                placeholder="Ex: tech, sports, cultural (comma separated)"
+                value={form.tags}
+                onChange={e => setForm({ ...form, tags: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Customization (Normal Events Only) */}
+        {form.type === "NORMAL" && (
+          <div className="form-section premium-card">
+            <h2>Registration Rules</h2>
+            <div className="section-grid">
+              <label className="checkbox-card">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.isTeamEvent)}
+                  onChange={(e) => setForm({ ...form, isTeamEvent: e.target.checked })}
+                  style={{ width: "auto", marginRight: "1rem" }}
+                />
+                <b>Enable Team Registrations</b>
+              </label>
+              {form.isTeamEvent && (
+                <div className="input-group" style={{ paddingLeft: "2.5rem" }}>
+                  <label>Required Team Size</label>
+                  <input
+                    type="number"
+                    min="2"
+                    style={{ maxWidth: "120px" }}
+                    value={form.teamSize}
+                    onChange={(e) => setForm({ ...form, teamSize: Number(e.target.value) })}
+                  />
+                </div>
+              )}
+
+              <div style={{ marginTop: "1rem" }}>
+                <h3 style={{ fontSize: "0.875rem", marginBottom: "1.5rem", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Custom Data Questionnaire</h3>
+                <div className="builder-area">
+                  {form.registrationForm.map((field, index) => (
+                    <div key={index} className="form-field-builder">
+                      <div className="builder-controls">
+                        <button type="button" className="builder-icon-btn" onClick={() => moveFormField(index, "up")} disabled={index === 0}>↑</button>
+                        <button type="button" className="builder-icon-btn" onClick={() => moveFormField(index, "down")} disabled={index === form.registrationForm.length - 1}>↓</button>
+                        <button type="button" className="builder-icon-btn delete" onClick={() => removeFormField(index)}>×</button>
+                      </div>
+                      <div className="section-grid" style={{ maxWidth: "100%" }}>
+                        <div className="section-row">
+                          <div className="input-group">
+                            <label>Field Name</label>
+                            <input
+                              placeholder="Ex: Roll Number"
+                              value={field.label}
+                              onChange={e => updateFormField(index, "label", e.target.value)}
+                            />
+                          </div>
+                          <div className="input-group">
+                            <label>Field Type</label>
+                            <select
+                              value={field.type}
+                              onChange={e => updateFormField(index, "type", e.target.value)}
+                            >
+                              <option value="text">Textual</option>
+                              <option value="number">Numeric</option>
+                              <option value="dropdown">Selection</option>
+                              <option value="checkbox">Toggle</option>
+                              <option value="file">File Upload</option>
+                            </select>
+                          </div>
+                        </div>
+                        {field.type === "dropdown" && (
+                          <div className="input-group">
+                            <label>Menu Options (comma separated)</label>
+                            <input
+                              placeholder="Red, Blue, Green"
+                              value={field.options || ""}
+                              onChange={e => updateFormField(index, "options", e.target.value)}
+                            />
+                          </div>
+                        )}
+                        <label className="checkbox-card">
+                          <input
+                            type="checkbox"
+                            checked={field.required || false}
+                            onChange={e => updateFormField(index, "required", e.target.checked)}
+                            style={{ width: "auto", marginRight: "1rem" }}
+                          />
+                          Mark as Mandatory
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addFormField} className="add-block-btn">
+                    <span>+</span> Add Custom Question
                   </button>
                 </div>
-                <label>Field Label</label>
-                <input
-                  placeholder="e.g. T-Shirt Size"
-                  value={field.label}
-                  onChange={e => updateFormField(index, "label", e.target.value)}
-                />
-                <label>Field Type</label>
-                <select
-                  value={field.type}
-                  onChange={e => updateFormField(index, "type", e.target.value)}
-                >
-                  <option value="text">Text</option>
-                  <option value="number">Number</option>
-                  <option value="email">Email</option>
-                  <option value="dropdown">Dropdown</option>
-                  <option value="checkbox">Checkbox</option>
-                  <option value="file">File Upload</option>
-                </select>
-                {field.type === "dropdown" && (
-                  <>
-                    <label>Options (comma separated)</label>
-                    <input
-                      placeholder="e.g. Small, Medium, Large"
-                      value={field.options || ""}
-                      onChange={e => updateFormField(index, "options", e.target.value)}
-                    />
-                  </>
-                )}
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={field.required || false}
-                    onChange={e => updateFormField(index, "required", e.target.checked)}
-                  />
-                  Required Field
-                </label>
               </div>
-            ))}
-            <button type="button" onClick={addFormField} className="add-field-btn">
-              + Add Form Field
-            </button>
+            </div>
           </div>
         )}
 
+        {/* Section 4: Merchandise (Store Events Only) */}
         {form.type === "MERCHANDISE" && (
-          <div className="form-section">
-            <h2>Merchandise Items</h2>
-            {form.merchandiseItems.map((item, index) => (
-              <div key={index} className="merch-item-builder">
-                <label>Item Name</label>
-                <input
-                  placeholder="e.g. Felicity T-Shirt"
-                  value={item.name || ""}
-                  onChange={e => updateMerchItem(index, "name", e.target.value)}
-                />
-                <label>Price (₹)</label>
-                <input
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  value={item.price || 0}
-                  onChange={e => updateMerchItem(index, "price", Number(e.target.value))}
-                />
-                <label>Stock</label>
-                <input
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  value={item.stock || 0}
-                  onChange={e => updateMerchItem(index, "stock", Number(e.target.value))}
-                />
-                <label>Size Options (comma separated)</label>
-                <input
-                  placeholder="e.g. S, M, L, XL"
-                  value={item.sizeOptions || ""}
-                  onChange={e => updateMerchItem(index, "sizeOptions", e.target.value)}
-                />
-                <label>Color Options (comma separated)</label>
-                <input
-                  placeholder="e.g. Red, Blue, Black"
-                  value={item.colorOptions || ""}
-                  onChange={e => updateMerchItem(index, "colorOptions", e.target.value)}
-                />
-                <label>Purchase Limit Per Participant</label>
-                <input
-                  type="number"
-                  placeholder="1"
-                  min="1"
-                  value={item.purchaseLimitPerParticipant || 1}
-                  onChange={e => updateMerchItem(index, "purchaseLimitPerParticipant", Number(e.target.value))}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeMerchItem(index)}
-                  className="remove-item-btn"
-                >
-                  Remove Item
-                </button>
-              </div>
-            ))}
-            <button type="button" onClick={addMerchItem} className="add-item-btn">
-              + Add Merchandise Item
-            </button>
+          <div className="form-section premium-card">
+            <h2>Inventory & Pricing</h2>
+            <div className="builder-area">
+              {form.merchandiseItems.map((item, index) => (
+                <div key={index} className="merch-item-builder">
+                  <div className="builder-controls">
+                    <button type="button" className="builder-icon-btn delete" onClick={() => removeMerchItem(index)}>×</button>
+                  </div>
+                  <div className="section-grid" style={{ maxWidth: "100%" }}>
+                    <div className="input-group">
+                      <label>Product Name</label>
+                      <input
+                        placeholder="Ex: Limited Edition Hoodie"
+                        value={item.name || ""}
+                        onChange={e => updateMerchItem(index, "name", e.target.value)}
+                      />
+                    </div>
+                    <div className="section-row">
+                      <div className="input-group">
+                        <label>Price (₹)</label>
+                        <input
+                          type="number"
+                          value={item.price || 0}
+                          onChange={e => updateMerchItem(index, "price", Number(e.target.value))}
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Stock Available</label>
+                        <input
+                          type="number"
+                          value={item.stock || 0}
+                          onChange={e => updateMerchItem(index, "stock", Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <div className="section-row">
+                      <div className="input-group">
+                        <label>Sizes</label>
+                        <input
+                          placeholder="S, M, L"
+                          value={item.sizeOptions || ""}
+                          onChange={e => updateMerchItem(index, "sizeOptions", e.target.value)}
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Colors</label>
+                        <input
+                          placeholder="Black, Navy"
+                          value={item.colorOptions || ""}
+                          onChange={e => updateMerchItem(index, "colorOptions", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addMerchItem} className="add-block-btn">
+                <span>+</span> Add Product to Store
+              </button>
+            </div>
           </div>
         )}
 
         <div className="form-actions">
-          <button type="submit" className="create-btn" disabled={loading}>
-            {loading ? "Creating..." : "Create Event (Draft)"}
+          <button type="submit" className="primary lg" disabled={loading}>
+            {loading ? "Publishing..." : "Launch Event"}
           </button>
         </div>
       </form>

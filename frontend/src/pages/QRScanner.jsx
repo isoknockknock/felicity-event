@@ -31,6 +31,14 @@ export default function QRScanner() {
             .then((res) => setEvent(res.data))
             .catch(() => { });
         loadDashboard();
+
+        // Cleanup on unmount
+        return () => {
+            if (html5QrCodeRef.current) {
+                html5QrCodeRef.current.stop().catch(() => { });
+                html5QrCodeRef.current = null;
+            }
+        };
     }, [eventId, loadDashboard]);
 
     const startScanning = async () => {
@@ -147,9 +155,9 @@ export default function QRScanner() {
         <div className="qr-scanner-container">
             <div className="qr-scanner-header">
                 <Link to={`/organizer/events/${eventId}`} className="back-link">
-                    ← Back to Event
+                    ← Back to Management
                 </Link>
-                <h1>QR Scanner & Attendance</h1>
+                <h1>Attendance Station</h1>
                 {event && <div className="event-name">{event.name}</div>}
             </div>
 
@@ -162,7 +170,7 @@ export default function QRScanner() {
                         stopScanning();
                     }}
                 >
-                    📷 Scanner
+                    📷 Control
                 </button>
                 <button
                     className={`scanner-tab ${activeTab === "dashboard" ? "active" : ""}`}
@@ -172,7 +180,7 @@ export default function QRScanner() {
                         loadDashboard();
                     }}
                 >
-                    📊 Live Dashboard
+                    📊 Live Analytics
                 </button>
                 <button
                     className={`scanner-tab ${activeTab === "audit" ? "active" : ""}`}
@@ -182,7 +190,7 @@ export default function QRScanner() {
                         loadDashboard();
                     }}
                 >
-                    📋 Audit Log
+                    📋 Security Audit
                 </button>
             </div>
 
@@ -191,18 +199,18 @@ export default function QRScanner() {
                 <div className="scanner-section">
                     <div className="scanner-controls">
                         {!scanning ? (
-                            <button onClick={startScanning} className="scan-btn">
+                            <button onClick={startScanning} className="primary">
                                 📷 Start Camera Scan
                             </button>
                         ) : (
-                            <button onClick={stopScanning} className="stop-btn">
+                            <button onClick={stopScanning} className="secondary" style={{ borderColor: "var(--danger)", color: "var(--danger)" }}>
                                 ⏹ Stop Scanning
                             </button>
                         )}
 
                         <div className="file-upload-section">
                             <label className="file-upload-label">
-                                📁 Upload QR Image
+                                📁 Upload Image
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -214,34 +222,39 @@ export default function QRScanner() {
 
                         <button
                             onClick={() => setShowManualOverride(!showManualOverride)}
-                            className="manual-btn"
+                            className="secondary"
                         >
-                            ✏️ Manual Override
+                            ✏️ Manual Entry
                         </button>
                     </div>
 
-                    <div id="qr-reader" style={{ width: "100%", maxWidth: "400px", margin: "1rem auto" }} />
+                    <div id="qr-reader" style={{ width: "100%", maxWidth: "500px", margin: "2rem auto" }} />
                     <div id="qr-reader-file" style={{ display: "none" }} />
 
                     {/* Manual Override Form */}
                     {showManualOverride && (
-                        <div className="manual-override-form">
+                        <div className="manual-override-form premium-card">
                             <h3>Manual Attendance Override</h3>
-                            <input
-                                placeholder="Ticket ID"
-                                value={manualTicketId}
-                                onChange={(e) => setManualTicketId(e.target.value)}
-                                className="scanner-input"
-                            />
-                            <textarea
-                                placeholder="Reason for manual override (required for audit)"
-                                value={overrideReason}
-                                onChange={(e) => setOverrideReason(e.target.value)}
-                                className="scanner-textarea"
-                                rows="3"
-                            />
-                            <button onClick={handleManualOverride} className="override-submit-btn">
-                                Submit Override
+                            <div className="input-group">
+                                <label>Ticket identifier</label>
+                                <input
+                                    placeholder="Copy-paste the Ticket ID"
+                                    value={manualTicketId}
+                                    onChange={(e) => setManualTicketId(e.target.value)}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Authorization Reason</label>
+                                <textarea
+                                    placeholder="Why is this being manually scanned?"
+                                    value={overrideReason}
+                                    onChange={(e) => setOverrideReason(e.target.value)}
+                                    rows="3"
+                                    style={{ marginBottom: 0 }}
+                                />
+                            </div>
+                            <button onClick={handleManualOverride} className="primary full-width" style={{ marginTop: "1rem" }}>
+                                Grant Manual Access
                             </button>
                         </div>
                     )}
@@ -250,30 +263,27 @@ export default function QRScanner() {
                     {scanResult && (
                         <div className="scan-result success">
                             <h3>✅ {scanResult.message}</h3>
-                            {scanResult.participant && (
-                                <p>
-                                    <strong>Participant:</strong>{" "}
-                                    {scanResult.participant.firstName} {scanResult.participant.lastName}
-                                </p>
-                            )}
-                            <p>
-                                <strong>Event:</strong> {scanResult.event}
-                            </p>
-                            <p>
-                                <strong>Scanned At:</strong>{" "}
-                                {new Date(scanResult.scannedAt).toLocaleString()}
-                            </p>
-                            {scanResult.isManualOverride && (
-                                <p>
-                                    <strong>⚠️ Manual Override</strong> — Reason: {scanResult.overrideReason}
-                                </p>
-                            )}
+                            <div className="scan-details">
+                                {scanResult.participant && (
+                                    <p>
+                                        <strong>Participant:</strong>{" "}
+                                        {scanResult.participant.firstName} {scanResult.participant.lastName}
+                                    </p>
+                                )}
+                                <p><strong>Verified At:</strong> {new Date(scanResult.scannedAt).toLocaleString()}</p>
+                                {scanResult.isManualOverride && (
+                                    <p style={{ color: "var(--warning)", fontWeight: 700 }}>
+                                        ⚠️ EXCEPTION GRANTED: {scanResult.overrideReason}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     )}
 
                     {error && (
                         <div className="scan-result error">
-                            <h3>❌ {error}</h3>
+                            <h3>❌ Verification Failed</h3>
+                            <p>{error}</p>
                         </div>
                     )}
                 </div>
@@ -281,27 +291,22 @@ export default function QRScanner() {
 
             {/* Dashboard Tab */}
             {activeTab === "dashboard" && dashboard && (
-                <div className="dashboard-section">
+                <div className="dashboard-section animation-fade-in">
                     <div className="dashboard-stats">
                         <div className="stat-card">
                             <div className="stat-value">{dashboard.totalRegistered}</div>
-                            <div className="stat-label">Registered</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">{dashboard.totalTickets}</div>
-                            <div className="stat-label">Tickets</div>
+                            <div className="stat-label">Total Registered</div>
                         </div>
                         <div className="stat-card scanned">
                             <div className="stat-value">{dashboard.scannedCount}</div>
-                            <div className="stat-label">Scanned</div>
+                            <div className="stat-label">Successful Entries</div>
                         </div>
                         <div className="stat-card not-scanned">
                             <div className="stat-value">{dashboard.notScannedCount}</div>
-                            <div className="stat-label">Not Scanned</div>
+                            <div className="stat-label">Pending Entries</div>
                         </div>
                     </div>
 
-                    {/* Progress bar */}
                     <div className="progress-container">
                         <div className="progress-bar">
                             <div
@@ -312,55 +317,38 @@ export default function QRScanner() {
                             />
                         </div>
                         <div className="progress-text">
-                            {dashboard.totalTickets > 0
+                            <strong>{dashboard.totalTickets > 0
                                 ? `${((dashboard.scannedCount / dashboard.totalTickets) * 100).toFixed(1)}%`
-                                : "0%"}{" "}
-                            attended
+                                : "0%"} Completion</strong> ( {dashboard.scannedCount} / {dashboard.totalTickets} tickets )
                         </div>
                     </div>
 
                     <div className="export-section">
-                        <button onClick={exportAttendanceCSV} className="export-btn">
-                            📥 Export Attendance CSV
+                        <button onClick={exportAttendanceCSV} className="primary sm">
+                            📥 Download Report (.csv)
                         </button>
-                        <button onClick={loadDashboard} className="refresh-btn">
-                            🔄 Refresh
+                        <button onClick={loadDashboard} className="secondary sm">
+                            🔄 Sync Data
                         </button>
                     </div>
 
-                    {/* Scanned list */}
-                    <div className="attendee-section">
-                        <h3>✅ Scanned ({dashboard.scannedCount})</h3>
+                    <div className="attendee-section premium-card">
+                        <h3>Verified Check-ins</h3>
                         <div className="attendee-list">
-                            {dashboard.scanned.map((a) => (
-                                <div key={a._id} className="attendee-row scanned">
-                                    <div>
-                                        <strong>{a.participant?.firstName} {a.participant?.lastName}</strong>
-                                        <div className="attendee-email">{a.participant?.email}</div>
+                            {dashboard.scanned.length === 0 ? <p className="p-muted">No check-ins recorded yet.</p> :
+                                dashboard.scanned.map((a) => (
+                                    <div key={a._id} className="attendee-row">
+                                        <div>
+                                            <strong>{a.participant?.firstName} {a.participant?.lastName}</strong>
+                                            <div className="attendee-email">{a.participant?.email}</div>
+                                        </div>
+                                        <div className="attendee-meta">
+                                            <span className="ticket-badge">{a.ticketId}</span>
+                                            <span className="time">{new Date(a.scannedAt).toLocaleTimeString()}</span>
+                                            {a.isManualOverride && <span className="override-badge">Manual</span>}
+                                        </div>
                                     </div>
-                                    <div className="attendee-meta">
-                                        <span className="ticket-badge">{a.ticketId}</span>
-                                        <span className="time">{new Date(a.scannedAt).toLocaleTimeString()}</span>
-                                        {a.isManualOverride && <span className="override-badge">Manual</span>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Not scanned list */}
-                    <div className="attendee-section">
-                        <h3>⏳ Not Yet Scanned ({dashboard.notScannedCount})</h3>
-                        <div className="attendee-list">
-                            {dashboard.notScanned.map((t) => (
-                                <div key={t._id} className="attendee-row not-scanned">
-                                    <div>
-                                        <strong>{t.participant?.firstName} {t.participant?.lastName}</strong>
-                                        <div className="attendee-email">{t.participant?.email}</div>
-                                    </div>
-                                    <span className="ticket-badge">{t.ticketId}</span>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     </div>
                 </div>
@@ -368,31 +356,33 @@ export default function QRScanner() {
 
             {/* Audit Log Tab */}
             {activeTab === "audit" && dashboard && (
-                <div className="audit-section">
-                    <h3>📋 Manual Override Audit Log</h3>
+                <div className="audit-section animation-fade-in premium-card">
+                    <h3>Security Audit: Manual Exceptions</h3>
                     {dashboard.manualOverrides.length === 0 ? (
-                        <div className="empty">No manual overrides recorded.</div>
+                        <div className="empty p-muted">No manual overrides have been authorized for this event.</div>
                     ) : (
-                        <table className="audit-table">
-                            <thead>
-                                <tr>
-                                    <th>Participant</th>
-                                    <th>Ticket ID</th>
-                                    <th>Time</th>
-                                    <th>Reason</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {dashboard.manualOverrides.map((a) => (
-                                    <tr key={a._id}>
-                                        <td>{a.participant?.firstName} {a.participant?.lastName}</td>
-                                        <td>{a.ticketId}</td>
-                                        <td>{new Date(a.scannedAt).toLocaleString()}</td>
-                                        <td>{a.overrideReason}</td>
+                        <div style={{ overflowX: "auto" }}>
+                            <table className="audit-table">
+                                <thead>
+                                    <tr>
+                                        <th>Participant</th>
+                                        <th>Ticket ID</th>
+                                        <th>Time</th>
+                                        <th>Justification</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {dashboard.manualOverrides.map((a) => (
+                                        <tr key={a._id}>
+                                            <td>{a.participant?.firstName} {a.participant?.lastName}</td>
+                                            <td>{a.ticketId}</td>
+                                            <td>{new Date(a.scannedAt).toLocaleString()}</td>
+                                            <td style={{ fontStyle: "italic", color: "var(--text-secondary)" }}>{a.overrideReason}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             )}

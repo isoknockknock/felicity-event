@@ -107,7 +107,7 @@ export default function ManageClubs() {
       <div className="manage-clubs-header">
         <h1>Manage Clubs</h1>
         <button
-          className="add-btn"
+          className={showAddForm ? "secondary" : "primary"}
           onClick={() => {
             setShowAddForm(!showAddForm);
             setMessage("");
@@ -118,53 +118,65 @@ export default function ManageClubs() {
       </div>
 
       {message && (
-        <div className={`manage-clubs-message ${message.includes("Failed") ? "error" : "success"}`}>
+        <div className={`manage-clubs-message ${message.includes("Failed") || message.includes("error") ? "error" : "success"}`}>
           {message}
         </div>
       )}
 
       {showAddForm && (
-        <div className="add-organizer-form">
+        <div className="add-organizer-form premium-card">
           <h2>Add New Organizer</h2>
           <form onSubmit={handleAddOrganizer}>
-            <input
-              type="text"
-              placeholder="Name"
-              required
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Category"
-              required
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-            <textarea
-              placeholder="Description"
-              required
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows="4"
-            />
-            <button type="submit" className="submit-btn">
-              Create Organizer
+            <div className="input-group">
+              <label>Full Name</label>
+              <input
+                type="text"
+                placeholder="Club or Organizer Name"
+                required
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label>Category</label>
+              <input
+                type="text"
+                placeholder="e.g. Cultural, Technical"
+                required
+                value={formData.category}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group" style={{ gridColumn: "span 2" }}>
+              <label>Official Email</label>
+              <input
+                type="email"
+                placeholder="club@iiit.ac.in"
+                required
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group" style={{ gridColumn: "span 2" }}>
+              <label>About the Club</label>
+              <textarea
+                placeholder="Describe the club's purpose and activities..."
+                required
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows="4"
+              />
+            </div>
+            <button type="submit" className="primary submit-btn">
+              Create Organizer Account
             </button>
           </form>
         </div>
@@ -172,33 +184,35 @@ export default function ManageClubs() {
 
       <div className="organizers-list">
         {organizers.length === 0 ? (
-          <div className="no-organizers">No organizers found.</div>
+          <div className="empty-state">No organizers found. Start by adding one!</div>
         ) : (
           organizers.map((organizer) => (
             <div
               key={organizer._id}
-              className={`organizer-item ${!organizer.isActive ? "inactive" : ""}`}
+              className={`organizer-item premium-card ${!organizer.isActive ? "inactive" : ""}`}
             >
               <div className="organizer-info">
-                <h3>{organizer.name}</h3>
                 <div className="organizer-details">
                   <span className="category-badge">{organizer.category}</span>
                   <span className="email">{organizer.email}</span>
                 </div>
+                <h3>{organizer.name}</h3>
                 {organizer.description && (
                   <p className="description">{organizer.description}</p>
                 )}
-                {!organizer.isActive && (
-                  <span className="inactive-badge">Inactive</span>
-                )}
-                {organizer.isArchived && (
-                  <span className="archived-badge">Archived</span>
-                )}
-                {organizer.archivedAt && (
-                  <span className="archived-date">
-                    Archived: {new Date(organizer.archivedAt).toLocaleDateString()}
-                  </span>
-                )}
+                <div style={{ marginTop: "1rem" }}>
+                  {!organizer.isActive && (
+                    <span className="inactive-badge">Inactive</span>
+                  )}
+                  {organizer.isArchived && (
+                    <span className="archived-badge">Archived</span>
+                  )}
+                  {organizer.archivedAt && (
+                    <span className="archived-date" style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>
+                      · Archived on {new Date(organizer.archivedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="organizer-actions">
                 {organizer.isActive && (
