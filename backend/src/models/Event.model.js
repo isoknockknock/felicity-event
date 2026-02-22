@@ -37,9 +37,9 @@ const eventSchema = new mongoose.Schema(
     // Normal event form (later)
     registrationForm: [
       {
-        label: String,
-        type: String,
-        required: Boolean,
+        label: { type: String },
+        type: { type: String },
+        required: { type: Boolean, default: false },
         options: [String]
       }
     ],

@@ -30,7 +30,7 @@ export default function EventCreate() {
       ...form,
       registrationForm: [
         ...form.registrationForm,
-        { label: "", type: "text", required: false, options: [] }
+        { label: "", type: "text", required: false, options: "" }
       ]
     });
   };
@@ -95,6 +95,9 @@ export default function EventCreate() {
     try {
       const payload = {
         ...form,
+        registrationDeadline: form.registrationDeadline || undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
         tags: form.tags
           ? form.tags.split(",").map(t => t.trim())
           : [],
@@ -114,8 +117,8 @@ export default function EventCreate() {
           label: field.label,
           type: field.type,
           required: field.required || false,
-          options: field.type === "dropdown" && field.options
-            ? field.options.split(",").map(o => o.trim())
+          options: field.type === "dropdown" && typeof field.options === "string"
+            ? field.options.split(",").map(o => o.trim()).filter(Boolean)
             : []
         })),
         isTeamEvent: form.type === "NORMAL" ? Boolean(form.isTeamEvent) : false,
@@ -126,7 +129,8 @@ export default function EventCreate() {
       alert("Event created as draft!");
       navigate(`/organizer/events/${res.data._id}`);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to create event");
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || "Failed to create event";
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -144,28 +148,36 @@ export default function EventCreate() {
       <form onSubmit={createEvent} className="event-create-form">
         <div className="form-section">
           <h2>Basic Information</h2>
+          <label htmlFor="eventName">Event Name *</label>
           <input
-            placeholder="Event Name *"
+            id="eventName"
+            placeholder="e.g. Annual Sports Meet"
             required
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
           />
+          <label htmlFor="description">Description *</label>
           <textarea
-            placeholder="Description *"
+            id="description"
+            placeholder="Tell participants what your event is about..."
             required
             rows="4"
             value={form.description}
             onChange={e => setForm({ ...form, description: e.target.value })}
           />
+          <label htmlFor="eventType">Event Type</label>
           <select
+            id="eventType"
             value={form.type}
             onChange={e => setForm({ ...form, type: e.target.value })}
           >
             <option value="NORMAL">Normal Event</option>
             <option value="MERCHANDISE">Merchandise</option>
           </select>
+          <label htmlFor="eligibility">Eligibility</label>
           <input
-            placeholder="Eligibility"
+            id="eligibility"
+            placeholder="e.g. All Students, 3rd Year Only"
             value={form.eligibility}
             onChange={e => setForm({ ...form, eligibility: e.target.value })}
           />
@@ -173,40 +185,47 @@ export default function EventCreate() {
 
         <div className="form-section">
           <h2>Dates & Limits</h2>
-          <label>Registration Deadline</label>
+          <label htmlFor="registrationDeadline">Registration Deadline</label>
           <input
+            id="registrationDeadline"
             type="datetime-local"
             value={form.registrationDeadline}
             onChange={e => setForm({ ...form, registrationDeadline: e.target.value })}
           />
-          <label>Start Date</label>
+          <label htmlFor="startDate">Start Date</label>
           <input
+            id="startDate"
             type="datetime-local"
             value={form.startDate}
             onChange={e => setForm({ ...form, startDate: e.target.value })}
           />
-          <label>End Date</label>
+          <label htmlFor="endDate">End Date</label>
           <input
+            id="endDate"
             type="datetime-local"
             value={form.endDate}
             onChange={e => setForm({ ...form, endDate: e.target.value })}
           />
+          <label htmlFor="registrationLimit">Registration Limit (0 for unlimited)</label>
           <input
+            id="registrationLimit"
             type="number"
-            placeholder="Registration Limit (0 for unlimited)"
             min="0"
             value={form.registrationLimit}
             onChange={e => setForm({ ...form, registrationLimit: Number(e.target.value) })}
           />
+          <label htmlFor="registrationFee">Registration Fee (₹)</label>
           <input
+            id="registrationFee"
             type="number"
-            placeholder="Registration Fee (₹)"
             min="0"
             value={form.registrationFee}
             onChange={e => setForm({ ...form, registrationFee: Number(e.target.value) })}
           />
+          <label htmlFor="tags">Tags (comma separated)</label>
           <input
-            placeholder="Tags (comma separated)"
+            id="tags"
+            placeholder="sports, tech, cult"
             value={form.tags}
             onChange={e => setForm({ ...form, tags: e.target.value })}
           />
@@ -227,10 +246,12 @@ export default function EventCreate() {
             </label>
             {form.isTeamEvent && (
               <>
+                <label htmlFor="teamSize">Team Size</label>
                 <input
+                  id="teamSize"
                   type="number"
                   min="2"
-                  placeholder="Team size (e.g., 2)"
+                  placeholder="e.g., 2"
                   value={form.teamSize}
                   onChange={(e) =>
                     setForm({ ...form, teamSize: Number(e.target.value) })
@@ -273,11 +294,13 @@ export default function EventCreate() {
                     Remove
                   </button>
                 </div>
+                <label>Field Label</label>
                 <input
-                  placeholder="Field Label"
+                  placeholder="e.g. T-Shirt Size"
                   value={field.label}
                   onChange={e => updateFormField(index, "label", e.target.value)}
                 />
+                <label>Field Type</label>
                 <select
                   value={field.type}
                   onChange={e => updateFormField(index, "type", e.target.value)}
@@ -290,11 +313,14 @@ export default function EventCreate() {
                   <option value="file">File Upload</option>
                 </select>
                 {field.type === "dropdown" && (
-                  <input
-                    placeholder="Options (comma separated)"
-                    value={field.options || ""}
-                    onChange={e => updateFormField(index, "options", e.target.value)}
-                  />
+                  <>
+                    <label>Options (comma separated)</label>
+                    <input
+                      placeholder="e.g. Small, Medium, Large"
+                      value={field.options || ""}
+                      onChange={e => updateFormField(index, "options", e.target.value)}
+                    />
+                  </>
                 )}
                 <label className="checkbox-label">
                   <input
@@ -317,38 +343,44 @@ export default function EventCreate() {
             <h2>Merchandise Items</h2>
             {form.merchandiseItems.map((item, index) => (
               <div key={index} className="merch-item-builder">
+                <label>Item Name</label>
                 <input
-                  placeholder="Item Name"
+                  placeholder="e.g. Felicity T-Shirt"
                   value={item.name || ""}
                   onChange={e => updateMerchItem(index, "name", e.target.value)}
                 />
+                <label>Price (₹)</label>
                 <input
                   type="number"
-                  placeholder="Price (₹)"
+                  placeholder="0"
                   min="0"
                   value={item.price || 0}
                   onChange={e => updateMerchItem(index, "price", Number(e.target.value))}
                 />
+                <label>Stock</label>
                 <input
                   type="number"
-                  placeholder="Stock"
+                  placeholder="0"
                   min="0"
                   value={item.stock || 0}
                   onChange={e => updateMerchItem(index, "stock", Number(e.target.value))}
                 />
+                <label>Size Options (comma separated)</label>
                 <input
-                  placeholder="Size Options (comma separated, e.g., S, M, L, XL)"
+                  placeholder="e.g. S, M, L, XL"
                   value={item.sizeOptions || ""}
                   onChange={e => updateMerchItem(index, "sizeOptions", e.target.value)}
                 />
+                <label>Color Options (comma separated)</label>
                 <input
-                  placeholder="Color Options (comma separated, e.g., Red, Blue, Black)"
+                  placeholder="e.g. Red, Blue, Black"
                   value={item.colorOptions || ""}
                   onChange={e => updateMerchItem(index, "colorOptions", e.target.value)}
                 />
+                <label>Purchase Limit Per Participant</label>
                 <input
                   type="number"
-                  placeholder="Purchase Limit Per Participant"
+                  placeholder="1"
                   min="1"
                   value={item.purchaseLimitPerParticipant || 1}
                   onChange={e => updateMerchItem(index, "purchaseLimitPerParticipant", Number(e.target.value))}

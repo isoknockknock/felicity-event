@@ -77,6 +77,9 @@ export default function EventEdit() {
       if (event.status === "DRAFT") {
         const payload = {
           ...formData,
+          registrationDeadline: formData.registrationDeadline || undefined,
+          startDate: formData.startDate || undefined,
+          endDate: formData.endDate || undefined,
           tags: formData.tags
             ? formData.tags.split(",").map(t => t.trim())
             : []
@@ -176,20 +179,26 @@ export default function EventEdit() {
             <>
               <div className="form-section">
                 <h2>Basic Information</h2>
+                <label htmlFor="eventName">Event Name *</label>
                 <input
+                  id="eventName"
                   placeholder="Event Name *"
                   required
                   value={formData.name || ""}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                 />
+                <label htmlFor="description">Description *</label>
                 <textarea
+                  id="description"
                   placeholder="Description *"
                   required
                   rows="4"
                   value={formData.description || ""}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                 />
+                <label htmlFor="eligibility">Eligibility</label>
                 <input
+                  id="eligibility"
                   placeholder="Eligibility"
                   value={formData.eligibility || ""}
                   onChange={e => setFormData({ ...formData, eligibility: e.target.value })}
@@ -198,39 +207,48 @@ export default function EventEdit() {
 
               <div className="form-section">
                 <h2>Dates & Limits</h2>
-                <label>Registration Deadline</label>
+                <label htmlFor="registrationDeadline">Registration Deadline</label>
                 <input
+                  id="registrationDeadline"
                   type="datetime-local"
                   value={formData.registrationDeadline || ""}
                   onChange={e => setFormData({ ...formData, registrationDeadline: e.target.value })}
                 />
-                <label>Start Date</label>
+                <label htmlFor="startDate">Start Date</label>
                 <input
+                  id="startDate"
                   type="datetime-local"
                   value={formData.startDate || ""}
                   onChange={e => setFormData({ ...formData, startDate: e.target.value })}
                 />
-                <label>End Date</label>
+                <label htmlFor="endDate">End Date</label>
                 <input
+                  id="endDate"
                   type="datetime-local"
                   value={formData.endDate || ""}
                   onChange={e => setFormData({ ...formData, endDate: e.target.value })}
                 />
+                <label htmlFor="registrationLimit">Registration Limit (0 for unlimited)</label>
                 <input
+                  id="registrationLimit"
                   type="number"
                   placeholder="Registration Limit (0 for unlimited)"
                   min="0"
                   value={formData.registrationLimit || 0}
                   onChange={e => setFormData({ ...formData, registrationLimit: Number(e.target.value) })}
                 />
+                <label htmlFor="registrationFee">Registration Fee (₹)</label>
                 <input
+                  id="registrationFee"
                   type="number"
                   placeholder="Registration Fee (₹)"
                   min="0"
                   value={formData.registrationFee || 0}
                   onChange={e => setFormData({ ...formData, registrationFee: Number(e.target.value) })}
                 />
+                <label htmlFor="tags">Tags (comma separated)</label>
                 <input
+                  id="tags"
                   placeholder="Tags (comma separated)"
                   value={formData.tags || ""}
                   onChange={e => setFormData({ ...formData, tags: e.target.value })}
