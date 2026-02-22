@@ -1,0 +1,75 @@
+.organizers-container {
+  padding: 40px;
+  min-height: 80vh;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2rem;
+}
+
+.organizers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.organizer-card {
+  background: #1f1f1f;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: transform 0.2s ease;
+  color: white;              /* 👈 ADD THIS */
+}
+
+.organizer-card h2 {
+  margin-bottom: 10px;
+  color: white;              /* 👈 Ensure heading is white */
+}
+
+.description,
+.email {
+  color: #ddd;               /* softer white */
+}
+
+
+.category {
+  display: inline-block;
+  font-size: 0.85rem;
+  background: #4e73df;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 15px;
+}
+
+.email {
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.follow-btn {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.follow-btn:hover {
+  background-color: #218838;
+}
+
+.center {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.error {
+  color: red;
+}

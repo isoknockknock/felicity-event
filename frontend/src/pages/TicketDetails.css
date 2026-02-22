@@ -1,0 +1,67 @@
+.ticket-page .ticket-head {
+  margin-bottom: 1rem;
+}
+
+.ticket-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ticket-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #374151;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.ticket-info .row {
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.ticket-qr {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #f9fafb;
+  text-align: center;
+}
+
+.ticket-qr img {
+  width: 280px;
+  height: 280px;
+  object-fit: contain;
+}
+
+.qr-caption {
+  margin-top: 0.75rem;
+  color: #6b7280;
+}
+
+.event-link {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .ticket-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,77 @@
+.organizer-detail .org-head {
+  margin-bottom: 1rem;
+}
+
+.back-link {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.org-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.org-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: #374151;
+  margin: 0.75rem 0;
+}
+
+.org-desc {
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.org-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.org-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.org-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.org-event-card {
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #f9fafb;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.org-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.org-event-card .title {
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.empty {
+  color: #6b7280;
+  padding: 0.75rem 0;
+}
+
