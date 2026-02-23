@@ -1,0 +1,2 @@
+Backend: https://felicity-event-ac9o.onrender.com/api
+Frontend: felicity-event-indol.vercel.app
